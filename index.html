@@ -84,6 +84,7 @@ h2 { font: 500 12px/1 var(--f-display); letter-spacing: .14em; text-transform: u
 .note { margin: 0; font-size: 13.5px; min-height: 1.4em; color: var(--muted); overflow-wrap: anywhere; }
 .note.ok { color: var(--lime); }
 .note.err { color: var(--bad); }
+.note.warn { color: var(--warn); }
 .panel button { align-self: flex-start; }
 
 .fine { color: var(--muted); font-size: 13px; margin: 0; max-width: 62ch; }
@@ -133,12 +134,13 @@ footer { border-top: 1px solid var(--line); padding-top: 22px; display: flex; fl
         <dd><span id="v-ms">&ndash;</span><span class="unit">msIMTX</span></dd>
       </div>
       <div class="row">
-        <div><dt>Claimable rewards</dt><p class="sub">Paid out by claim</p></div>
+        <div><dt>Claimable rewards</dt><p class="sub">Displayed entitlement. Available to pay out now: <span id="s-avail">&ndash;</span> USDm</p></div>
         <dd><span id="v-rew">&ndash;</span><span class="unit">USDm</span></dd>
       </div>
     </dl>
     <p class="hint" id="hint">Connect your wallet to see your balances and use the actions below.</p>
     <p class="note" id="note-read" role="status" aria-live="polite"></p>
+    <p class="note warn" id="note-rew" role="status" aria-live="polite" hidden>The displayed amount is only an entitlement calculated from time and rate. A claim pays out at most what the reward distributor currently holds in USDm. If that balance is lower, the claim transfers less or nothing, and the rest stays unpaid until the distributor is refilled.</p>
   </section>
 
   <section aria-labelledby="act-h">
@@ -196,7 +198,9 @@ footer { border-top: 1px solid var(--line); padding-top: 22px; display: flex; fl
     imtx: '0x84084B3a9fF2cb1f617355D0773Eb37722BA1D49',
     sIMTX: '0xDFF42a578F8126ea1A8DDE3d144A83Bcc71c3232',
     msIMTX: '0x981caDA0d62254c5244402Eb39bd5E1A50a22468',
-    mp: '0x03548C511706A0392C5013C7ee75385191739B44'
+    mp: '0x03548C511706A0392C5013C7ee75385191739B44',
+    usdm: '0x765DE816845861e75A25fCA122bb6898B8B1282a',
+    distributor: '0x1B54a3bE2Bb36ABe6A41E2AFE75b6B5A7b21Af91'
   };
   var CELO_ID = 42220;
   var A = {};
@@ -281,8 +285,9 @@ footer { border-top: 1px solid var(--line); padding-top: 22px; display: flex; fl
     ['btn-claim', 'btn-stake', 'btn-unstake'].forEach(function (id) { $(id).disabled = !can; });
     $('hint').hidden = connected && state.ok;
     if (!(connected && state.ok)) {
-      ['v-imtx', 's-staked', 'v-mp', 's-mpwallet', 'v-ms', 'v-rew', 'a-stake', 'a-unstake'].forEach(function (id) { $(id).textContent = '–'; });
+      ['v-imtx', 's-staked', 'v-mp', 's-mpwallet', 'v-ms', 'v-rew', 's-avail', 'a-stake', 'a-unstake'].forEach(function (id) { $(id).textContent = '–'; });
       state.bal = { wallet: null, staked: null };
+      $('note-rew').hidden = true;
     }
   }
 
@@ -293,13 +298,16 @@ footer { border-top: 1px solid var(--line); padding-top: 22px; display: flex; fl
       var imtx = new ethers.Contract(A.imtx, ERC20, p);
       var mp = new ethers.Contract(A.mp, ERC20, p);
       var ms = new ethers.Contract(A.msIMTX, TRACKER, p);
-      var r = await Promise.all([
+      var usdm = new ethers.Contract(A.usdm, ERC20, p);
+      var r =await Promise.all([
         imtx.balanceOf(u),
         ms.depositBalances(u, A.sIMTX),
         ms.depositBalances(u, A.mp),
         mp.balanceOf(u),
         ms.balanceOf(u),
-        ms.claimable(u)
+        ms.claimable(u),
+        usdm.balanceOf(A.distributor),
+        usdm.balanceOf(A.msIMTX)
       ]);
       state.bal = { wallet: r[0], staked: r[1] };
       $('v-imtx').textContent = fmt(r[0]);
@@ -310,6 +318,9 @@ footer { border-top: 1px solid var(--line); padding-top: 22px; display: flex; fl
       $('s-mpwallet').textContent = fmt(r[3]);
       $('v-ms').textContent = fmt(r[4]);
       $('v-rew').textContent = fmt(r[5]);
+      var avail = r[6].add(r[7]);
+      $('s-avail').textContent = fmt(avail);
+      $('note-rew').hidden = !r[5].gt(avail);
       note('note-read', '');
     } catch (e) {
       note('note-read', 'Could not read your balances: ' + errText(e), 'err');
