@@ -25,13 +25,11 @@ Hosted at https://imtx.sterntalerapp.xyz
 | msIMTX | `0x981caDA0d62254c5244402Eb39bd5E1A50a22468` |
 | Multiplier Points | `0x03548C511706A0392C5013C7ee75385191739B44` |
 
-## Deploy (GitHub Pages)
+## Deploy (Vercel)
 
-1. Settings > Pages > Deploy from a branch > `main` / root.
-2. DNS: CNAME record `imtx` -> `frerehugi.github.io`.
-3. Enable "Enforce HTTPS" once the certificate is issued.
-
-The `CNAME` file in this repo sets the custom domain.
+1. Import this repo in Vercel. Framework preset "Other", no build command, output directory left empty (project root).
+2. Project > Settings > Domains: add `imtx.sterntalerapp.xyz`.
+3. DNS: create the record Vercel shows for the subdomain `imtx` (usually a CNAME to `cname.vercel-dns.com`).
 
 ## Status
 
