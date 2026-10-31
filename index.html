@@ -1,0 +1,476 @@
+<title>ImmortalX Staking</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: one ledger column. Position rows first, three action panels below, contract list as footer.
+   Look: black ground, lime brand color, X mark (ImmortalX identity). Single dark theme by design. */
+:root {
+  --bg: #07090a;
+  --surface: #0d1210;
+  --raised: #141b17;
+  --line: #1f2a25;
+  --fg: #e8eee9;
+  --muted: #8a978f;
+  --lime: #c6ff3d;
+  --lime-ink: #0a1100;
+  --bad: #ff7a6b;
+  --warn: #ffcf5a;
+  --f-display: 'Unbounded', 'Arial Black', system-ui, sans-serif;
+  --f-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-data: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html { background: var(--bg); }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.55 var(--f-body);
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+a { color: var(--lime); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+header { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand svg { width: 28px; height: 28px; flex: none; }
+.brand b { font: 700 14px/1 var(--f-display); letter-spacing: .12em; text-transform: uppercase; }
+.brand span { color: var(--muted); font: 500 14px/1 var(--f-display); letter-spacing: .06em; }
+
+button { font: 600 14px/1 var(--f-body); cursor: pointer; border-radius: 6px; padding: 13px 18px; border: 1px solid transparent; }
+button:disabled { opacity: .38; cursor: not-allowed; }
+.btn-lime { background: var(--lime); color: var(--lime-ink); }
+.btn-lime:not(:disabled):hover { filter: brightness(1.08); }
+.btn-line { background: transparent; color: var(--fg); border-color: #3a4841; }
+.btn-line:not(:disabled):hover { border-color: var(--lime); color: var(--lime); }
+.chip { display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font: 500 13px/1 var(--f-data); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); }
+.dot.off { background: var(--warn); }
+
+.hero h1 { font: 700 clamp(30px, 7vw, 48px)/1.08 var(--f-display); margin: 0 0 14px; text-wrap: balance; letter-spacing: -.01em; }
+.hero p { margin: 0; color: var(--muted); max-width: 56ch; }
+
+.banner { border: 1px solid var(--warn); border-radius: 8px; padding: 14px 16px; display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.banner p { margin: 0; min-width: 0; }
+
+h2 { font: 500 12px/1 var(--f-display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+
+.ledger { margin: 0; border-top: 1px solid var(--line); }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.row > div { min-width: 0; }
+.row dt { font-weight: 500; }
+.row .sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.row dd { margin: 0; text-align: right; font: 500 clamp(20px, 5.4vw, 28px)/1.1 var(--f-data); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.unit { font: 400 12px/1 var(--f-data); color: var(--muted); margin-left: 6px; letter-spacing: .04em; }
+.hint { color: var(--muted); font-size: 13px; margin: 12px 0 0; }
+
+.actions { display: grid; gap: 16px; }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel h3 { margin: 0; font: 700 16px/1.25 var(--f-display); text-wrap: balance; }
+.panel p.desc { margin: 0; color: var(--muted); font-size: 13.5px; }
+.field label { display: block; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.input { display: flex; align-items: center; border: 1px solid #33413a; border-radius: 6px; background: var(--bg); }
+.input:focus-within { border-color: var(--lime); }
+.input input { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--fg); font: 500 18px/1 var(--f-data); padding: 14px; outline: none; font-variant-numeric: tabular-nums; }
+.input input::placeholder { color: #55625b; }
+.input span { padding-right: 14px; color: var(--muted); font: 400 12px/1 var(--f-data); letter-spacing: .04em; }
+.avail { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+.avail b { font-family: var(--f-data); font-weight: 500; color: var(--fg); }
+.note { margin: 0; font-size: 13.5px; min-height: 1.4em; color: var(--muted); overflow-wrap: anywhere; }
+.note.ok { color: var(--lime); }
+.note.err { color: var(--bad); }
+.panel button { align-self: flex-start; }
+
+.fine { color: var(--muted); font-size: 13px; margin: 0; max-width: 62ch; }
+footer { border-top: 1px solid var(--line); padding-top: 22px; display: flex; flex-direction: column; gap: 14px; }
+.contracts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.contracts li { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 13px; }
+.contracts span { color: var(--muted); }
+.contracts a { font-family: var(--f-data); }
+@media (prefers-reduced-motion: no-preference) { button { transition: filter .15s, border-color .15s, color .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 5 L27 27 M27 5 L5 27" fill="none" stroke="#c6ff3d" stroke-width="5.5" stroke-linecap="square"/></svg>
+      <div><b>ImmortalX</b> <span>Staking</span></div>
+    </div>
+    <div>
+      <button id="btn-connect" class="btn-lime" type="button">Connect wallet</button>
+      <span id="acct" class="chip" hidden><i class="dot" id="dot"></i><span id="acct-text"></span></span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Stake IMTX on Celo</h1>
+    <p>Direct access to the ImmortalX staking contracts. Every amount is typed by you and every transaction is confirmed in your own wallet.</p>
+  </section>
+
+  <div id="netwarn" class="banner" hidden>
+    <p>Your wallet is connected to another network. Switch to Celo to continue.</p>
+    <button id="btn-switch" class="btn-line" type="button">Switch to Celo</button>
+  </div>
+
+  <section aria-labelledby="pos-h">
+    <h2 id="pos-h">Your position</h2>
+    <dl class="ledger">
+      <div class="row">
+        <div><dt>IMTX in wallet</dt><p class="sub">Staked IMTX: <span id="s-staked">&ndash;</span></p></div>
+        <dd><span id="v-imtx">&ndash;</span><span class="unit">IMTX</span></dd>
+      </div>
+      <div class="row">
+        <div><dt>Multiplier Points</dt><p class="sub">Staked. In wallet: <span id="s-mpwallet">&ndash;</span></p></div>
+        <dd><span id="v-mp">&ndash;</span><span class="unit">MP</span></dd>
+      </div>
+      <div class="row">
+        <div><dt>msIMTX</dt><p class="sub">Staking receipt token</p></div>
+        <dd><span id="v-ms">&ndash;</span><span class="unit">msIMTX</span></dd>
+      </div>
+      <div class="row">
+        <div><dt>Claimable rewards</dt><p class="sub">Paid out by claim</p></div>
+        <dd><span id="v-rew">&ndash;</span><span class="unit">USDm</span></dd>
+      </div>
+    </dl>
+    <p class="hint" id="hint">Connect your wallet to see your balances and use the actions below.</p>
+    <p class="note" id="note-read" role="status" aria-live="polite"></p>
+  </section>
+
+  <section aria-labelledby="act-h">
+    <h2 id="act-h">Actions</h2>
+    <div class="actions">
+      <div class="panel">
+        <h3>Claim rewards and stake msIMTX</h3>
+        <p class="desc">Calls <code>claimRewardsAndStakeMP</code> on the router: pays out your rewards and stakes your Multiplier Points. No amount needed.</p>
+        <button id="btn-claim" class="btn-lime" type="button" disabled>Claim and stake</button>
+        <p class="note" id="note-claim" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="pair">
+        <form class="panel" id="form-stake" autocomplete="off">
+          <h3>Stake IMTX</h3>
+          <div class="field">
+            <label for="stake-amt">Amount to stake</label>
+            <div class="input"><input id="stake-amt" inputmode="decimal" placeholder="0.0" autocomplete="off" spellcheck="false"><span>IMTX</span></div>
+            <p class="avail">Available in wallet: <b id="a-stake">&ndash;</b></p>
+          </div>
+          <p class="desc">If needed, your wallet first asks to approve exactly this amount for the staking contract, then to stake it. Two confirmations.</p>
+          <button id="btn-stake" class="btn-lime" type="submit" disabled>Stake IMTX</button>
+          <p class="note" id="note-stake" role="status" aria-live="polite"></p>
+        </form>
+
+        <form class="panel" id="form-unstake" autocomplete="off">
+          <h3>Unstake IMTX</h3>
+          <div class="field">
+            <label for="unstake-amt">Amount to unstake</label>
+            <div class="input"><input id="unstake-amt" inputmode="decimal" placeholder="0.0" autocomplete="off" spellcheck="false"><span>IMTX</span></div>
+            <p class="avail">Currently staked: <b id="a-unstake">&ndash;</b></p>
+          </div>
+          <p class="desc">Returns IMTX to your wallet. Your wallet asks for one confirmation.</p>
+          <button id="btn-unstake" class="btn-line" type="submit" disabled>Unstake IMTX</button>
+          <p class="note" id="note-unstake" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="fine">This page talks directly to the contracts below on Celo mainnet. It holds no funds and no keys. Check the addresses before you confirm anything in your wallet.</p>
+    <ul class="contracts" id="contracts"></ul>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+
+  var RAW = {
+    router: '0x5E9a114ccE258fc20aA3C8af3933f926F8c1506A',
+    imtx: '0x84084B3a9fF2cb1f617355D0773Eb37722BA1D49',
+    sIMTX: '0xDFF42a578F8126ea1A8DDE3d144A83Bcc71c3232',
+    msIMTX: '0x981caDA0d62254c5244402Eb39bd5E1A50a22468',
+    mp: '0x03548C511706A0392C5013C7ee75385191739B44'
+  };
+  var CELO_ID = 42220;
+  var A = {};
+
+  function note(id, msg, kind, hash) {
+    var el = $(id);
+    el.className = 'note' + (kind ? ' ' + kind : '');
+    el.textContent = msg || '';
+    if (hash) {
+      var a = document.createElement('a');
+      a.href = 'https://celoscan.io/tx/' + hash;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = 'View transaction';
+      el.append(' ', a);
+    }
+  }
+
+  if (typeof ethers === 'undefined') {
+    note('note-read', 'The wallet library could not be loaded. Reload the page or check your connection.', 'err');
+    return;
+  }
+  var U = ethers.utils;
+  Object.keys(RAW).forEach(function (k) { A[k] = U.getAddress(RAW[k].toLowerCase()); });
+
+  var ERC20 = [
+    'function balanceOf(address) view returns (uint256)',
+    'function allowance(address,address) view returns (uint256)',
+    'function approve(address,uint256) returns (bool)'
+  ];
+  var TRACKER = [
+    'function balanceOf(address) view returns (uint256)',
+    'function depositBalances(address,address) view returns (uint256)',
+    'function claimable(address) view returns (uint256)'
+  ];
+  var ROUTER = [
+    'function stakeIMTX(uint256)',
+    'function unstakeIMTX(uint256)',
+    'function claimRewardsAndStakeMP()'
+  ];
+
+  var state = { provider: null, account: null, ok: false, busy: false, bal: { wallet: null, staked: null } };
+
+  function fmt(bn, dp) {
+    dp = dp || 4;
+    if (bn.isZero()) return '0';
+    var parts = U.formatUnits(bn, 18).split('.');
+    var i = parts[0], f = (parts[1] || '').slice(0, dp);
+    if (Number(i) === 0 && /^0*$/.test(f)) return '<0.' + new Array(dp).join('0') + '1';
+    f = f.replace(/0+$/, '');
+    i = i.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return f ? i + '.' + f : i;
+  }
+  function short(a) { return a.slice(0, 6) + '…' + a.slice(-4); }
+
+  function errText(e) {
+    var code = e && (e.code !== undefined ? e.code : (e.error && e.error.code));
+    if (code === 4001 || code === 'ACTION_REJECTED') return 'Cancelled in your wallet. Nothing was sent.';
+    var m = (e && (e.reason || (e.error && e.error.message) || (e.data && e.data.message) || e.message)) || 'Unknown error';
+    m = String(m).replace(/\s+/g, ' ');
+    return m.length > 180 ? m.slice(0, 180) + '…' : m;
+  }
+
+  function parseAmt(inputId, noteId) {
+    var raw = $(inputId).value.trim().replace(',', '.');
+    if (!/^\d+(\.\d{1,18})?$/.test(raw)) { note(noteId, 'Type an amount, for example 25 or 0.5.', 'err'); return null; }
+    var v = U.parseUnits(raw, 18);
+    if (v.isZero()) { note(noteId, 'The amount must be greater than 0.', 'err'); return null; }
+    return v;
+  }
+
+  function updateUI() {
+    var connected = !!state.account;
+    $('btn-connect').hidden = connected;
+    $('acct').hidden = !connected;
+    if (connected) {
+      $('acct-text').textContent = short(state.account) + (state.ok ? ' · Celo' : ' · wrong network');
+      $('dot').className = 'dot' + (state.ok ? '' : ' off');
+    }
+    $('netwarn').hidden = !(connected && !state.ok);
+    var can = connected && state.ok && !state.busy;
+    ['btn-claim', 'btn-stake', 'btn-unstake'].forEach(function (id) { $(id).disabled = !can; });
+    $('hint').hidden = connected && state.ok;
+    if (!(connected && state.ok)) {
+      ['v-imtx', 's-staked', 'v-mp', 's-mpwallet', 'v-ms', 'v-rew', 'a-stake', 'a-unstake'].forEach(function (id) { $(id).textContent = '–'; });
+      state.bal = { wallet: null, staked: null };
+    }
+  }
+
+  async function refresh() {
+    if (!state.account || !state.ok) return;
+    try {
+      var p = state.provider, u = state.account;
+      var imtx = new ethers.Contract(A.imtx, ERC20, p);
+      var mp = new ethers.Contract(A.mp, ERC20, p);
+      var ms = new ethers.Contract(A.msIMTX, TRACKER, p);
+      var r = await Promise.all([
+        imtx.balanceOf(u),
+        ms.depositBalances(u, A.sIMTX),
+        ms.depositBalances(u, A.mp),
+        mp.balanceOf(u),
+        ms.balanceOf(u),
+        ms.claimable(u)
+      ]);
+      state.bal = { wallet: r[0], staked: r[1] };
+      $('v-imtx').textContent = fmt(r[0]);
+      $('a-stake').textContent = fmt(r[0]) + ' IMTX';
+      $('s-staked').textContent = fmt(r[1]);
+      $('a-unstake').textContent = fmt(r[1]) + ' IMTX';
+      $('v-mp').textContent = fmt(r[2]);
+      $('s-mpwallet').textContent = fmt(r[3]);
+      $('v-ms').textContent = fmt(r[4]);
+      $('v-rew').textContent = fmt(r[5]);
+      note('note-read', '');
+    } catch (e) {
+      note('note-read', 'Could not read your balances: ' + errText(e), 'err');
+    }
+  }
+
+  async function checkNetwork() {
+    var net = await state.provider.getNetwork();
+    state.ok = net.chainId === CELO_ID;
+  }
+
+  async function setAccount(addr) {
+    if (!addr) { state.account = null; state.ok = false; updateUI(); return; }
+    state.account = U.getAddress(addr);
+    await checkNetwork();
+    updateUI();
+    refresh();
+  }
+
+  async function connect() {
+    if (!window.ethereum) {
+      note('note-read', 'No browser wallet found. Open this page in your wallet app’s browser (MetaMask, Rabby, Valora) or install a wallet extension, then try again.', 'err');
+      return;
+    }
+    try {
+      state.provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+      var accts = await state.provider.send('eth_requestAccounts', []);
+      await setAccount(accts[0]);
+    } catch (e) {
+      note('note-read', errText(e), 'err');
+    }
+  }
+
+  async function switchToCelo() {
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0xa4ec' }] });
+    } catch (e) {
+      if (e && (e.code === 4902 || (e.data && e.data.originalError && e.data.originalError.code === 4902))) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0xa4ec',
+              chainName: 'Celo',
+              nativeCurrency: { name: 'CELO', symbol: 'CELO', decimals: 18 },
+              rpcUrls: ['https://forno.celo.org'],
+              blockExplorerUrls: ['https://celoscan.io']
+            }]
+          });
+        } catch (e2) { note('note-read', errText(e2), 'err'); }
+      } else {
+        note('note-read', errText(e), 'err');
+      }
+    }
+  }
+
+  function setBusy(b) { state.busy = b; updateUI(); }
+
+  async function waitFor(tx, noteId, label) {
+    note(noteId, label + ' Waiting for confirmation…', '', tx.hash);
+    await tx.wait();
+  }
+
+  async function doClaim() {
+    var n = 'note-claim';
+    note(n, '');
+    setBusy(true);
+    try {
+      var router = new ethers.Contract(A.router, ROUTER, state.provider.getSigner());
+      note(n, 'Confirm in your wallet…');
+      try { await router.estimateGas.claimRewardsAndStakeMP(); }
+      catch (e) { throw new Error('The contract rejected this call in simulation. Nothing was sent. ' + errText(e)); }
+      var tx = await router.claimRewardsAndStakeMP();
+      await waitFor(tx, n, 'Sent.');
+      note(n, 'Rewards claimed and Multiplier Points staked.', 'ok', tx.hash);
+      refresh();
+    } catch (e) { note(n, errText(e), 'err'); }
+    setBusy(false);
+  }
+
+  async function doStake(ev) {
+    ev.preventDefault();
+    var n = 'note-stake';
+    note(n, '');
+    var amt = parseAmt('stake-amt', n);
+    if (!amt) return;
+    if (state.bal.wallet && amt.gt(state.bal.wallet)) { note(n, 'This is more than the IMTX in your wallet.', 'err'); return; }
+    setBusy(true);
+    try {
+      var signer = state.provider.getSigner();
+      var imtx = new ethers.Contract(A.imtx, ERC20, signer);
+      var router = new ethers.Contract(A.router, ROUTER, signer);
+      var allowance = await imtx.allowance(state.account, A.sIMTX);
+      if (allowance.lt(amt)) {
+        note(n, 'Step 1 of 2: approve exactly ' + fmt(amt) + ' IMTX in your wallet…');
+        var ap = await imtx.approve(A.sIMTX, amt);
+        await waitFor(ap, n, 'Approval sent.');
+      }
+      note(n, allowance.lt(amt) ? 'Step 2 of 2: confirm the staking in your wallet…' : 'Confirm the staking in your wallet…');
+      try { await router.estimateGas.stakeIMTX(amt); }
+      catch (e) { throw new Error('The contract rejected this stake in simulation. Nothing was staked. ' + errText(e)); }
+      var tx = await router.stakeIMTX(amt);
+      await waitFor(tx, n, 'Stake sent.');
+      note(n, 'Staked ' + fmt(amt) + ' IMTX.', 'ok', tx.hash);
+      $('stake-amt').value = '';
+      refresh();
+    } catch (e) { note(n, errText(e), 'err'); }
+    setBusy(false);
+  }
+
+  async function doUnstake(ev) {
+    ev.preventDefault();
+    var n = 'note-unstake';
+    note(n, '');
+    var amt = parseAmt('unstake-amt', n);
+    if (!amt) return;
+    if (state.bal.staked && amt.gt(state.bal.staked)) { note(n, 'This is more than your staked IMTX.', 'err'); return; }
+    setBusy(true);
+    try {
+      var router = new ethers.Contract(A.router, ROUTER, state.provider.getSigner());
+      note(n, 'Confirm the unstaking in your wallet…');
+      try { await router.estimateGas.unstakeIMTX(amt); }
+      catch (e) { throw new Error('The contract rejected this unstake in simulation. Nothing was sent. ' + errText(e)); }
+      var tx = await router.unstakeIMTX(amt);
+      await waitFor(tx, n, 'Unstake sent.');
+      note(n, 'Unstaked ' + fmt(amt) + ' IMTX.', 'ok', tx.hash);
+      $('unstake-amt').value = '';
+      refresh();
+    } catch (e) { note(n, errText(e), 'err'); }
+    setBusy(false);
+  }
+
+  // Contract list
+  var list = [['StakingRewardRouter', A.router], ['IMTX', A.imtx], ['sIMTX (staking tracker)', A.sIMTX], ['msIMTX', A.msIMTX], ['Multiplier Points', A.mp]];
+  var ul = $('contracts');
+  list.forEach(function (it) {
+    var li = document.createElement('li');
+    var s = document.createElement('span'); s.textContent = it[0];
+    var a = document.createElement('a');
+    a.href = 'https://celoscan.io/address/' + it[1]; a.target = '_blank'; a.rel = 'noopener'; a.textContent = it[1];
+    a.style.overflowWrap = 'anywhere';
+    li.append(s, a); ul.append(li);
+  });
+
+  $('btn-connect').addEventListener('click', connect);
+  $('btn-switch').addEventListener('click', switchToCelo);
+  $('btn-claim').addEventListener('click', doClaim);
+  $('form-stake').addEventListener('submit', doStake);
+  $('form-unstake').addEventListener('submit', doUnstake);
+
+  if (window.ethereum) {
+    if (window.ethereum.on) {
+      window.ethereum.on('accountsChanged', function (a) { if (state.provider) setAccount(a && a[0]); });
+      window.ethereum.on('chainChanged', async function () { if (state.provider && state.account) { await checkNetwork(); updateUI(); refresh(); } });
+    }
+    // Reuse an existing permission without opening a popup.
+    try {
+      state.provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+      state.provider.send('eth_accounts', []).then(function (a) { if (a && a[0]) setAccount(a[0]); }).catch(function () {});
+    } catch (e) {}
+  }
+  updateUI();
+})();
+</script>
